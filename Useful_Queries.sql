@@ -28,3 +28,23 @@ FROM msdb.dbo.sysjobactivity AS sja
 INNER JOIN msdb.dbo.sysjobs AS sj ON sja.job_id = sj.job_id
 WHERE sja.start_execution_date IS NOT NULL
 AND sja.stop_execution_date IS NULL
+
+--5. Check execute permissions on procedures
+
+SELECT s.name AS SchemaName,
+o.name AS ObjectName,
+dp.name AS PrincipalName,
+dperm.type AS PermissionType,
+dperm.permission_name AS PermissionName,
+dperm.state AS PermissionState,
+dperm.state_desc AS PermissionStateDescription
+FROM sys.objects o
+INNER JOIN sys.schemas s on o.schema_id = s.schema_id
+INNER JOIN sys.database_permissions dperm ON o.object_id = dperm.major_id
+INNER JOIN sys.database_principals dp 
+ON dperm.grantee_principal_id = dp.principal_id
+WHERE dperm.class = 1 --object or column
+AND dperm.type = 'EX'
+AND dp.name = 'username'
+AND o.name = 'object_name'
+
